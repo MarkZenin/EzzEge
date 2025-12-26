@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ezzEGE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/genai": "https://cdn.jsdelivr.net/npm/@google/genai@0.0.1/+esm"
+          }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar-menu">
+    <div class="sidebar-header">
+        <div class="logo-text">Навигация</div>
+        <button class="close-sidebar" onclick="closeSidebar()" aria-label="Закрыть меню">&times;</button>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link" onclick="closeSidebar(); goBackToMain();">
+            <i class="fas fa-home"></i> Главная
+        </a>
+        <a href="#" class="sidebar-link" onclick="closeSidebar(); goToTaskSelection();">
+            <i class="fas fa-microchip"></i> AI-движок EzzEGE
+        </a>
+
+        <a href="#" class="sidebar-link" onclick="closeSidebar(); goToTaskBank();">
+            <i class="fas fa-list-alt"></i> Сборник задач
+        </a>
+
+        <a href="#" class="sidebar-link" onclick="closeSidebar(); openTheoryModal();">
+            <i class="fas fa-book-open"></i> Теория
+        </a>
+
+        <hr style="border: 0; height: 1px; background: var(--card-border); margin: 10px 0;">
+
+        <a href="#" class="sidebar-link" onclick="closeSidebar(); copyEmail();">
+            <i class="fas fa-envelope"></i> Связь с нами
+        </a>
+    </nav>
+</aside>
+<div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i> Email скопирован в буфер обмена!
+</div>
+
+<header class="header">
+    <button class="btn btn-icon" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Открыть меню">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="logo-container">
+        <div class="logo-text">ezzEGE</div>
+    </div>
+
+    <button class="btn btn-icon" onclick="toggleSettingsModal()" aria-label="Открыть настройки">
+        <i class="fas fa-cog"></i>
+    </button>
+</header>
+
+<main class="container">
+    <section id="main-page" class="page active">
+        <div class="hero">
+            <h1>готовься к ЕГЭ по инфе легко и быстро</h1>
+            <p>Тут будут новости проекта. Остовайтесь с нами!</p>
+        </div>
+
+        <div class="card-grid">
+        </div>
+    </section>
+
+    <section id="task-bank-page" class="page">
+        <nav aria-label="breadcrumb" class="breadcrumbs">
+            <ul>
+                <li><a href="#" onclick="goBackToMain()">Главная</a></li>
+                <li>Сборник задач</li>
+            </ul>
+        </nav>
+        <h2>Сборник задач</h2>
+        <p class="subtitle">найди нужные себе задачи</p>
+
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="task-number-filter">Номер задачи:</label>
+                <select id="task-number-filter" class="custom-select">
+                    <option value="all">Все (1-27)</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Сложность:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="difficulty" value="base"> Базовая</label>
+                    <label><input type="checkbox" name="difficulty" value="medium"> Средняя</label>
+                    <label><input type="checkbox" name="difficulty" value="hard"> Тяжелая</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Автор:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="author" value="fipi"> ФИПИ</label>
+                    <label><input type="checkbox" name="author" value="ezzege"> EzzEGE</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <i class="fas fa-filter"></i> Применить
+                </button>
+            </div>
+        </div>
+
+
+    </section>
+    <section id="task-selection-page" class="page">
+        <nav aria-label="breadcrumb" class="breadcrumbs">
+            <ul>
+                <li><a href="#" onclick="goBackToMain()">Главная</a></li>
+                <li>Задачи</li>
+            </ul>
+        </nav>
+        <h2>Выберите задачу</h2>
+        <p class="subtitle"></p>
+
+        <div class="theory-grid" id="task-selection-grid">
+        </div>
+    </section>
+
+    <section id="task-input-page" class="page">
+        <nav aria-label="breadcrumb" class="breadcrumbs">
+            <ul>
+                <li><a href="#" onclick="goBackToMain()">Главная</a></li>
+                <li><a href="#" onclick="showPage('task-selection-page')">Задачи</a></li>
+                <li>Задание <span class="current-task-number"></span></li>
+            </ul>
+        </nav>
+        <h2>Решаем задачу <span class="current-task-number"></span></h2>
+        <p id="task-input-subtitle">Введите условие</p>
+
+        <form id="task-solver-form">
+
+            <div id="task-input-default">
+                <textarea name="text" id="task-input-area" class="task-input" placeholder="Введите условие задачи здесь"></textarea><br/>
+            </div>
+
+            <div id="task-input-image" style="display: none;">
+                <input type="file" name="file_image" class="task-input" accept="image/*">
+            </div>
+
+            <div id="task-input-spreadsheet" style="display: none;">
+                <input type="file" name="file_spreadsheet" class="task-input" accept=".csv, .xls, .xlsx, .ods">
+            </div>
+
+            <div id="task-input-textfile" style="display: none;">
+                <input type="file" name="file_text" class="task-input" accept=".txt, .text, .docx">
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-calculator"></i> Решить
+            </button>
+        </form>
+    </section>
+
+    <section id="task-result-page" class="page">
+        <nav aria-label="breadcrumb" class="breadcrumbs">
+            <ul>
+                <li><a href="#" onclick="goBackToMain()">Главная</a></li>
+                <li><a href="#" onclick="showPage('task-selection-page')">Задачи</a></li>
+                <li>Задание <span id="result-task-number-h2" class="current-task-number"></span></li>
+                <li>Результат</li>
+            </ul>
+        </nav>
+        <h2>Результат решения задачи <span id="result-task-number" class="current-task-number"></span></h2>
+        <p class="subtitle">Ответ с пояснением</p>
+
+        <div class="card" style="margin-bottom: 25px;">
+            <h3 class="card-title" style="margin-bottom: 10px; color: var(--primary);">Ответ:</h3>
+            <p class="card-text" id="user-task-text" style="font-style: italic; white-space: pre-wrap;"></p>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title" style="margin-bottom: 15px; color: var(--secondary);">Программный ответ</h3>
+            <div id="ai-response-text" class="theory-content">
+            </div>
+        </div>
+    </section>
+
+
+    <section id="theory-page" class="page">
+        <nav aria-label="breadcrumb" class="breadcrumbs">
+            <ul>
+                <li><a href="#" onclick="goBackToMain()">Главная</a></li>
+                <li><a href="#" onclick="openTheoryModal()">Теория</a></li>
+                <li>Задание <span id="current-theory-number"></span></li>
+            </ul>
+        </nav>
+        <div class="theory-content" id="theory-content-container">
+        </div>
+    </section>
+
+</main>
+
+<button class="btn btn-primary back-button" id="global-back-button" onclick="handleBackNavigation()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+
+<div class="modal-overlay" id="theory-modal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeTheoryModal()" aria-label="Закрыть окно выбора теории">&times;</button>
+        <h2 class="modal-title">Выберите задание</h2>
+        <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);"></p>
+
+        <div class="theory-grid" id="theory-grid">
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeSettingsModal()" aria-label="Закрыть окно настроек">&times;</button>
+
+        <h2 class="modal-title">Настройки</h2>
+        <p style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);"></p>
+
+        <div class="setting-item">
+            <span class="setting-label"><i class="fas fa-palette"></i> Темная тема</span>
+            <div class="theme-toggle" id="theme-toggle">
+                <div class="toggle-thumb"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
